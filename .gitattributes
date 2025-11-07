@@ -1,0 +1,11 @@
+# Normalize text files in the repository
+* text=auto
+
+# Explicitly mark common text types
+*.py  text
+*.js  text
+*.css text
+*.html text
+*.json text
+*.md  text
+*.txt text
