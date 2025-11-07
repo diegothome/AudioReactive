@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Audio Reactive – Controles</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <style>
+      /* Overrides locais para este arquivo: neutralizar estilos globais e garantir largura total */
+      #control-app label { display: block; flex-direction: initial; gap: 0; color: #e8eaed; }
+      #control-app .form-label, #control-app .form-check-label { color: #e8eaed !important; }
+      #control-app .form-control, #control-app .form-select { background-color: #1c2238; color: #e8eaed; border: 1px solid #2a3150; }
+      #control-app .form-control::placeholder { color: #b0bec5; opacity: 0.85; }
+      #control-app input[type="range"] { width: 100% !important; }
+      #control-app input#dirPath, #control-app input#youtubeUrl, #control-app input#logoPath { width: 100% !important; }
+      #control-app .controls-page { max-width: 640px; margin: 24px auto; padding: 16px; }
+      /* Neutraliza o estilo global de #controls (fixo + flex) só nesta página */
+      #control-app #controls.controls-page {
+        position: static !important;
+        top: auto !important;
+        left: auto !important;
+        z-index: auto !important;
+        display: block !important;
+        align-items: stretch !important;
+        gap: 0 !important;
+        background: rgba(20, 24, 38, 0.9) !important;
+        border: 1px solid #2a3150 !important;
+        border-radius: 10px !important;
+        padding: 16px 18px !important;
+        overflow-x: hidden !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="control-app" class="container py-3">
+      <div id="controls" class="controls-page">
+        <h1 class="h5 mb-3">Controles</h1>
+
+        <!-- Visualização -->
+        <div class="mb-3">
+          <label for="spectrumType" class="form-label">Tipo</label>
+          <select id="spectrumType" class="form-select">
+            <option value="linear" selected>Linear</option>
+            <option value="radial">Radial</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="paletteSelect" class="form-label">Paleta</label>
+          <select id="paletteSelect" class="form-select">
+            <option value="rainbow">Rainbow</option>
+            <option value="neon">Neon</option>
+            <option value="fire">Fire</option>
+            <option value="cyber">Cyber</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="sensitivity" class="form-label">Sensibilidade</label>
+        <input id="sensitivity" class="form-range" type="range" min="0.6" max="4" step="0.1" value="0.9" />
+        </div>
+
+        <!-- Fundo -->
+        <div class="mb-3">
+          <label for="bgSource" class="form-label">Fundo</label>
+          <select id="bgSource" class="form-select">
+            <option value="images">Imagens da Pasta</option>
+            <option value="video">Vídeo YouTube</option>
+          </select>
+        </div>
+        <div class="form-check mb-3">
+          <input id="toggleSpace" class="form-check-input" type="checkbox" checked />
+          <label class="form-check-label" for="toggleSpace">Fundo Espaço</label>
+        </div>
+        <div class="mb-3">
+          <label for="videoBrightness" class="form-label">Brilho Vídeo/Imagem</label>
+          <input id="videoBrightness" class="form-range" type="range" min="0.6" max="1.6" step="0.05" value="1.1" />
+        </div>
+        <div class="mb-3">
+          <label for="bgIntensity" class="form-label">Intensidade do Fundo</label>
+          <input id="bgIntensity" class="form-range" type="range" min="0" max="1" step="0.05" value="0.5" />
+        </div>
+
+        <!-- YouTube -->
+        <div class="mb-3">
+          <label for="youtubeUrl" class="form-label">Vídeo YouTube (URL)</label>
+        <input id="youtubeUrl" class="form-control" type="text" placeholder="https://www.youtube.com/watch?v=..." value="https://www.youtube.com/watch?v=AOqY6UdJFvo" />
+        </div>
+        <div class="d-grid gap-2 mb-3">
+          <button id="useYoutubeButton" class="btn btn-danger">Usar YouTube</button>
+        </div>
+
+        <!-- Imagens locais -->
+        <div class="mb-3">
+          <label for="dirPath" class="form-label">Pasta de imagens</label>
+          <input id="dirPath" class="form-control" type="text" placeholder="C:\\Users\\SeuUsuario\\Pictures" value="C:\\Users\\PICHAU\\Pictures\\Lago-E\\ImagensDJ\\" />
+        </div>
+        <div class="d-grid gap-2 mb-3">
+          <button id="useFolderButton" class="btn btn-info text-dark">Usar pasta</button>
+        </div>
+
+        <!-- Logo -->
+        <div class="mb-3">
+          <label for="logoPath" class="form-label">Logo (SVG/PNG/JPG)</label>
+          <input id="logoPath" class="form-control" type="text" placeholder="C:\\Users\\SeuUsuario\\Documents\\logo.svg" value="C:\\Users\\PICHAU\\Pictures\\Lago-E\\Logo-E.png" />
+        </div>
+        <div class="d-grid gap-2 mb-3">
+          <button id="useLogoButton" class="btn btn-success">Usar Logo</button>
+        </div>
+        <div class="form-check mb-3">
+          <input id="toggleLogo" class="form-check-input" type="checkbox" checked />
+          <label class="form-check-label" for="toggleLogo">Mostrar Logo</label>
+        </div>
+        <div class="mb-3">
+          <label for="logoSize" class="form-label">Tamanho do Logo</label>
+          <input id="logoSize" class="form-range" type="range" min="0.6" max="1.8" step="0.05" value="1.20" />
+        </div>
+        <div class="mb-3">
+          <label for="logoOpacity" class="form-label">Opacidade do Logo</label>
+          <input id="logoOpacity" class="form-range" type="range" min="0.40" max="1.00" step="0.05" value="0.90" />
+        </div>
+
+        
+
+        <!-- Troca automática -->
+        <div class="form-check mb-3">
+          <input id="autoSwap" class="form-check-input" type="checkbox" />
+          <label class="form-check-label" for="autoSwap">Troca automática</label>
+        </div>
+        <div class="mb-3">
+          <label for="swapInterval" class="form-label">Intervalo (s)</label>
+          <input id="swapInterval" class="form-range" type="range" min="3" max="60" step="1" value="12" />
+        </div>
+
+        <!-- Status -->
+        <div class="mb-3">
+          <label class="form-label">Status</label>
+          <span id="status" class="form-text">Controles em nova aba</span>
+        </div>
+      </div>
+    </div>
+
+    <script src="control.js"></script>
+  </body>
+  </html>

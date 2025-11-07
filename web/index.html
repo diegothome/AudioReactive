@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Audio Reactive (Grave/Médio/Agudo)</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+  <button id="micButton" title="Ativar microfone">🎤</button>
+  <button id="openControl" title="Abrir controles em outra aba">🗗</button>
+    <div id="videoLayer">
+      <iframe id="youtubeFrame" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+    </div>
+    <canvas id="canvas"></canvas>
+    <div id="controls" class="collapsed">
+      <button id="closeModal" title="Fechar">×</button>
+      <label>
+        Tipo
+        <select id="spectrumType">
+          <option value="linear" selected>Linear</option>
+          <option value="radial">Radial</option>
+        </select>
+      </label>
+      <label>
+        Paleta
+        <select id="paletteSelect">
+          <option value="rainbow">Rainbow</option>
+          <option value="neon">Neon</option>
+          <option value="fire">Fire</option>
+          <option value="cyber">Cyber</option>
+        </select>
+      </label>
+      <label>
+        Sensibilidade
+        <input id="sensitivity" type="range" min="0.6" max="4" step="0.1" value="0.9" />
+      </label>
+      <label>
+        Fundo
+        <select id="bgSource">
+          <option value="images">Imagens da Pasta</option>
+          <option value="video">Vídeo YouTube</option>
+        </select>
+      </label>
+      <label class="toggle">
+        Fundo Espaço
+        <input id="toggleSpace" type="checkbox" checked />
+      </label>
+      <label>
+        Vídeo do YouTube (URL)
+        <div class="row">
+          <input id="youtubeUrl" type="text" placeholder="https://www.youtube.com/watch?v=..." value="https://www.youtube.com/watch?v=AOqY6UdJFvo" />
+          <button id="useYoutubeButton">Usar YouTube</button>
+        </div>
+      </label>
+      <label>
+        Brilho do Vídeo
+        <input id="videoBrightness" type="range" min="0.6" max="1.6" step="0.05" value="1.1" />
+      </label>
+      <label>
+        Pasta local de imagens
+        <div class="row">
+          <input id="dirPath" type="text" placeholder="C:\\Users\\SeuUsuario\\Pictures" value="C:\\Users\\PICHAU\\Pictures\\Lago-E\\ImagensDJ\\" />
+          <button id="useFolderButton">Usar pasta</button>
+        </div>
+      </label>
+      <label>
+        Logo (SVG/PNG/JPG)
+        <div class="row">
+          <input id="logoPath" type="text" placeholder="C:\\Users\\SeuUsuario\\Documents\\logo.svg" value="C:\\Users\\PICHAU\\Pictures\\Lago-E\\Logo-E.png" />
+          <button id="useLogoButton">Usar Logo</button>
+        </div>
+      </label>
+      <label class="toggle">
+        Mostrar Logo
+        <input id="toggleLogo" type="checkbox" checked />
+      </label>
+      <label>
+        Tamanho do Logo
+        <input id="logoSize" type="range" min="0.6" max="1.8" step="0.05" value="1.20" />
+      </label>
+      <label>
+        Opacidade do Logo
+        <input id="logoOpacity" type="range" min="0.40" max="1.00" step="0.05" value="0.90" />
+      </label>
+      <label class="toggle">
+        Troca automática
+        <input id="autoSwap" type="checkbox" />
+      </label>
+      <label>
+        Intervalo (s)
+        <input id="swapInterval" type="range" min="3" max="60" step="1" value="12" />
+      </label>
+      <label>
+        Intensidade do Fundo
+        <input id="bgIntensity" type="range" min="0" max="1" step="0.05" value="0.5" />
+      </label>
+      <span id="status">Permissão de microfone não solicitada</span>
+    </div>
+    <div id="modalBackdrop"></div>
+    <div id="hud">
+      <div class="band"><span>Grave</span><div class="bar" id="bar-low"></div></div>
+      <div class="band"><span>Médio</span><div class="bar" id="bar-mid"></div></div>
+      <div class="band"><span>Agudo</span><div class="bar" id="bar-high"></div></div>
+    </div>
+    <script src="client.js"></script>
+  </body>
+  </html>
