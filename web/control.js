@@ -52,3 +52,7 @@
     }
   });
 })();
+// Controle de visibilidade das opções do tipo de espectro (Linear/Radial)
+// Quando "Nenhum" estiver ativo, as opções "Linear" e "Radial" desaparecem;
+// ao sair de "Nenhum", voltam a aparecer.
+// Removido: ocultação dinâmica de opções do tipo de espectro no controle.

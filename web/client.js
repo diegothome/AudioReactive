@@ -109,10 +109,17 @@ let logoOpacity = parseFloat(logoOpacityRange?.value || '0.90');
 // Alterna layout do HUD conforme tipo de espectro
 function applyLayoutForSpectrumType() {
   if (!hudEl) return;
-  if (spectrumType === 'linear') {
-    hudEl.classList.add('right');
+  if (spectrumType === 'none') {
+    // Oculta HUD quando nenhum espectro deve ser mostrado
+    hudEl.style.display = 'none';
   } else {
-    hudEl.classList.remove('right');
+    // Mostra HUD e ajusta layout
+    hudEl.style.display = 'grid';
+    if (spectrumType === 'linear') {
+      hudEl.classList.add('right');
+    } else {
+      hudEl.classList.remove('right');
+    }
   }
 }
 // Inicializa posição do HUD
@@ -762,7 +769,7 @@ function drawLogo(w, h) {
   const jyRand = (Math.random() - 0.5) * jitter * base;
 
   ctx.save();
-  if (spectrumType === 'linear') {
+  if (spectrumType === 'linear' || spectrumType === 'none') {
     // Margens fixas para afastar do topo/direita
     const marginTopPx = 30;
     const marginRightPx = 30;
@@ -918,7 +925,9 @@ function draw() {
   // Atualiza níveis a partir do WebAudio (se ativo)
   if (!useWSFallback) {
     updateLevelsFromAnalyser();
-    updateBars();
+    if (spectrumType !== 'none') {
+      updateBars();
+    }
   }
 
   // Fundo base: se for vídeo, não aplicamos véu escuro; apenas limpamos o canvas
@@ -947,8 +956,10 @@ function draw() {
     if (useSpaceBG) { if (starfield.length === 0) initStarfield(); drawStarfield(w, h); }
   }
 
-  // Sempre desenha o spectrum
-  drawSpectrum(w, h);
+  // Desenha espectro somente quando não estiver desativado
+  if (spectrumType !== 'none') {
+    drawSpectrum(w, h);
+  }
 
   // Atualiza transformações do vídeo conforme níveis
   updateVideoTransform();
@@ -992,3 +1003,7 @@ setStatus('Clique em "Ativar microfone" para conceder permissão.');
     console.warn('Init defaults falhou:', e);
   }
 })();
+// Controle de visibilidade das opções do tipo de espectro (Linear/Radial)
+// Quando "Nenhum" estiver ativo, as opções "Linear" e "Radial" desaparecem;
+// ao sair de "Nenhum", voltam a aparecer.
+// Removido: ocultação dinâmica de opções do tipo de espectro.
