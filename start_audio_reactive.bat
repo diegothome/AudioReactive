@@ -30,7 +30,7 @@ if errorlevel 1 (
 
 REM Configurações do servidor
 set "HOST=127.0.0.1"
-set "PORT=8000"
+set "PORT=9000"
 
 REM Iniciar servidor em uma nova janela (com auto-reload) usando Python
 start "AudioReactive Server" cmd /c "python -m uvicorn app.main:app --host %HOST% --port %PORT% --reload"
