@@ -38,6 +38,12 @@ const youtubeUrlInput = document.getElementById('youtubeUrl');
 const useYoutubeButton = document.getElementById('useYoutubeButton');
 const youtubeFrame = document.getElementById('youtubeFrame');
 const videoLayer = document.getElementById('videoLayer');
+// Vídeo local
+const localVideoPathInput = document.getElementById('localVideoPath');
+const useLocalVideoButton = document.getElementById('useLocalVideoButton');
+const browseLocalVideoButton = document.getElementById('browseLocalVideoButton');
+const localVideoFileInput = document.getElementById('localVideoFile');
+const localVideoEl = document.getElementById('localVideo');
 // Logo Vetorial
 const logoPathInput = document.getElementById('logoPath');
 const useLogoButton = document.getElementById('useLogoButton');
@@ -99,6 +105,7 @@ starfield = [];
 bgImage = null;
 overlayImage = null;
 let youtubeActive = false;
+let localVideoActive = false;
 let bgSource = 'images';
 let videoMoveStrength = 20; // pixels base de deslocamento
 let videoZoomStrength = 0.12; // fator de zoom base
@@ -246,11 +253,14 @@ function forceVideoReflow() {
 }
 
 function updateVideoTransform() {
-  if (!youtubeActive) return;
-  // Vídeo estático: sem deslocamento/zoom reativo
-  youtubeFrame.style.transform = 'translate(0px, 0px) scale(1)';
-  // Brilho fixo baseado apenas no slider
-  youtubeFrame.style.filter = `brightness(${baseVideoBrightness})`;
+  if (youtubeActive && youtubeFrame) {
+    youtubeFrame.style.transform = 'translate(0px, 0px) scale(1)';
+    youtubeFrame.style.filter = `brightness(${baseVideoBrightness})`;
+  }
+  if (localVideoActive && localVideoEl) {
+    localVideoEl.style.transform = 'translate(0px, 0px) scale(1)';
+    localVideoEl.style.filter = `brightness(${baseVideoBrightness})`;
+  }
 }
 
 useYoutubeButton.addEventListener('click', () => {
@@ -293,6 +303,10 @@ bgSourceSelect.addEventListener('change', async (e) => {
   bgSource = v;
   if (v === 'video') {
     youtubeActive = true;
+    localVideoActive = false;
+    if (localVideoEl) { localVideoEl.pause(); localVideoEl.src = ''; }
+    if (youtubeFrame) youtubeFrame.style.display = 'block';
+    if (localVideoEl) localVideoEl.style.display = 'none';
     // Desativa o fundo espaço por padrão ao usar vídeo
     useSpaceBG = false;
     if (toggleSpace) toggleSpace.checked = false;
@@ -308,8 +322,41 @@ bgSourceSelect.addEventListener('change', async (e) => {
       if (embed) youtubeFrame.src = embed;
     }
     setStatus('Fundo: Vídeo YouTube.');
+  } else if (v === 'localVideo') {
+    youtubeActive = false;
+    localVideoActive = true;
+    if (youtubeFrame) { youtubeFrame.src = 'about:blank'; youtubeFrame.style.display = 'none'; }
+    if (localVideoEl) localVideoEl.style.display = 'block';
+    useSpaceBG = false;
+    if (toggleSpace) toggleSpace.checked = false;
+    requestAnimationFrame(() => {
+      setVideoVisible(true);
+    });
+    localFolderActive = false;
+    stopAutoSwap();
+    const p = localVideoPathInput?.value?.trim();
+    if (p && localVideoEl) {
+      try {
+        await setLocalVideoPath(p);
+        const ok = await verifyVideoAvailable();
+        if (!ok) throw new Error('Vídeo não acessível pelo servidor');
+        localVideoEl.muted = true;
+        localVideoEl.autoplay = true;
+        localVideoEl.loop = true;
+        localVideoEl.playsInline = true;
+        localVideoEl.src = '/video';
+        localVideoEl.load();
+        localVideoEl.play().catch(() => {});
+        setStatus('Fundo: Vídeo local.');
+      } catch (err) {
+        setStatus('Erro ao ativar vídeo local. Use "Procurar..." se o caminho não abrir.', 'error');
+      }
+    }
   } else { // images
     youtubeActive = false;
+    localVideoActive = false;
+    if (youtubeFrame) { youtubeFrame.src = 'about:blank'; youtubeFrame.style.display = 'none'; }
+    if (localVideoEl) { localVideoEl.pause(); localVideoEl.src = ''; localVideoEl.style.display = 'none'; }
     setVideoVisible(false);
     localFolderActive = true;
     const p = dirPathInput.value.trim();
@@ -332,6 +379,13 @@ if (youtubeFrame) {
     setVideoVisible(true);
     forceVideoReflow();
     setStatus('Vídeo do YouTube pronto.');
+  });
+}
+if (localVideoEl) {
+  localVideoEl.addEventListener('loadeddata', () => {
+    localVideoActive = true;
+    setVideoVisible(true);
+    setStatus('Vídeo local pronto.');
   });
 }
 if (menuButton) menuButton.addEventListener('click', () => {
@@ -362,6 +416,85 @@ if (openControlButton) openControlButton.addEventListener('click', () => {
   document.addEventListener('mousemove', show, { passive: true });
   document.addEventListener('touchstart', show, { passive: true });
 })();
+async function setLocalVideoPath(path) {
+  const res = await fetch('/video/path', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path })
+  });
+  if (!res.ok) {
+    const msg = await res.text();
+    throw new Error(msg || 'Falha ao configurar vídeo');
+  }
+  return res.json();
+}
+
+async function verifyVideoAvailable() {
+  try {
+    const r = await fetch('/video', { method: 'HEAD' });
+    return r.ok;
+  } catch (e) {
+    return false;
+  }
+}
+
+useLocalVideoButton?.addEventListener('click', async () => {
+  const p = localVideoPathInput?.value?.trim();
+  if (!p) { setStatus('Informe o caminho do vídeo local.', 'error'); return; }
+  try {
+    await setLocalVideoPath(p);
+    const ok = await verifyVideoAvailable();
+    if (!ok) throw new Error('Vídeo não acessível pelo servidor');
+    youtubeActive = false;
+    localVideoActive = true;
+    bgSource = 'localVideo';
+    if (bgSourceSelect) bgSourceSelect.value = 'localVideo';
+    localFolderActive = false;
+    stopAutoSwap();
+    useSpaceBG = false;
+    if (toggleSpace) toggleSpace.checked = false;
+    if (youtubeFrame) youtubeFrame.src = 'about:blank';
+    if (localVideoEl) {
+      localVideoEl.src = '/video';
+      localVideoEl.play().catch(() => {});
+    }
+    try {
+      localStorage.setItem('ar.localVideo.mode', 'path');
+      localStorage.setItem('ar.localVideo.path', p);
+    } catch (e) {}
+    setVideoVisible(true);
+    setStatus('Vídeo local carregado como fundo.');
+  } catch (e) {
+    setStatus('Erro ao configurar vídeo local. Use "Procurar..." se o caminho não abrir.', 'error');
+  }
+});
+
+browseLocalVideoButton?.addEventListener('click', () => {
+  localVideoFileInput?.click();
+});
+
+localVideoFileInput?.addEventListener('change', () => {
+  const f = localVideoFileInput.files?.[0];
+  if (!f || !localVideoEl) return;
+  const url = URL.createObjectURL(f);
+  youtubeActive = false;
+  localVideoActive = true;
+  bgSource = 'localVideo';
+  if (bgSourceSelect) bgSourceSelect.value = 'localVideo';
+  localFolderActive = false;
+  stopAutoSwap();
+  useSpaceBG = false;
+  if (toggleSpace) toggleSpace.checked = false;
+  if (youtubeFrame) { youtubeFrame.src = 'about:blank'; youtubeFrame.style.display = 'none'; }
+  localVideoEl.muted = true;
+  localVideoEl.autoplay = true;
+  localVideoEl.loop = true;
+  localVideoEl.playsInline = true;
+  localVideoEl.src = url;
+  localVideoEl.load();
+  localVideoEl.play().catch(() => {});
+  try { localStorage.setItem('ar.localVideo.mode', 'blob'); } catch (e) {}
+  setVideoVisible(true);
+  setStatus('Vídeo local selecionado como fundo.');
+});
 
 // Comunicação entre abas via BroadcastChannel
 const controlChannel = new BroadcastChannel('ar-controls');
@@ -411,6 +544,37 @@ controlChannel.addEventListener('message', async (e) => {
         const rng = document.getElementById('videoBrightness');
         if (rng) rng.value = String(m.value);
         if (typeof baseVideoBrightness !== 'undefined') baseVideoBrightness = Number(m.value);
+        break;
+      }
+      case 'useLocalVideoBlobUrl': {
+        const sel = document.getElementById('bgSource');
+        if (sel) { sel.value = 'localVideo'; sel.dispatchEvent(new Event('change')); }
+        if (localVideoEl && m.url) {
+          youtubeActive = false;
+          localVideoActive = true;
+          bgSource = 'localVideo';
+          localFolderActive = false;
+          stopAutoSwap();
+          useSpaceBG = false;
+          const cb = document.getElementById('toggleSpace');
+          if (cb) cb.checked = false;
+          localVideoEl.src = m.url;
+          localVideoEl.play().catch(() => {});
+          setVideoVisible(true);
+          setStatus('Vídeo local selecionado como fundo.');
+        }
+        break;
+      }
+      case 'useLocalVideoPath': {
+        const input = document.getElementById('localVideoPath');
+        const btn = document.getElementById('useLocalVideoButton');
+        if (input) input.value = m.path || '';
+        if (btn) btn.click();
+        break;
+      }
+      case 'browseLocalVideo': {
+        const btn = document.getElementById('browseLocalVideoButton');
+        if (btn) btn.click();
         break;
       }
       case 'setDirPathAndUse': {
@@ -592,6 +756,7 @@ useFolderButton.addEventListener('click', async () => {
   await fetchRandomImageToBackground();
   // Desativa vídeo do YouTube quando usar imagens locais
   youtubeActive = false;
+  localVideoActive = false;
   setVideoVisible(false);
   bgSource = 'images';
   if (bgSourceSelect) bgSourceSelect.value = 'images';
@@ -931,7 +1096,7 @@ function draw() {
   }
 
   // Fundo base: se for vídeo, não aplicamos véu escuro; apenas limpamos o canvas
-  if (bgSource === 'video') {
+  if (bgSource === 'video' || bgSource === 'localVideo') {
     ctx.clearRect(0, 0, w, h);
   } else {
     const alphaBase = 0.08;
@@ -953,6 +1118,8 @@ function draw() {
     }
   } else if (bgSource === 'video') {
     // vídeo aparece no videoLayer por trás do canvas
+    if (useSpaceBG) { if (starfield.length === 0) initStarfield(); drawStarfield(w, h); }
+  } else if (bgSource === 'localVideo') {
     if (useSpaceBG) { if (starfield.length === 0) initStarfield(); drawStarfield(w, h); }
   }
 
@@ -980,20 +1147,85 @@ setStatus('Clique em "Ativar microfone" para conceder permissão.');
 // Inicializa com os caminhos padrão do usuário: logo e pasta
 (async function initDefaults() {
   try {
-    // Preenche campos (caso HTML não tenha valor)
+    // Preenche campos padrão
     if (!logoPathInput.value) {
-      logoPathInput.value = 'C\\\\Users\\\\PICHAU\\\\Pictures\\\\Lago-E\\\\Logo-E.png';
+      logoPathInput.value = 'C\\Users\\PICHAU\\Pictures\\Lago-E\\Logo-E.png';
     }
     if (!dirPathInput.value) {
-      dirPathInput.value = 'C\\\\Users\\\\PICHAU\\\\Pictures\\\\Lago-E\\\\ImagensDJ\\\\';
+      dirPathInput.value = 'C\\Users\\PICHAU\\Pictures\\Lago-E\\ImagensDJ\\';
     }
-    // Carrega logo automaticamente
     await loadLogoFromPath(logoPathInput.value.trim());
-    // Define pasta local automaticamente (e desativa YouTube)
+
+    // Preferência: usar vídeo local por padrão se usuário já definiu caminho antes
+    let preferredMode = null;
+    let preferredPath = null;
+    try {
+      preferredMode = localStorage.getItem('ar.localVideo.mode');
+      preferredPath = localStorage.getItem('ar.localVideo.path');
+    } catch (e) {}
+
+    if (preferredMode === 'path' && preferredPath) {
+      try {
+        await setLocalVideoPath(preferredPath);
+        const okPref = await verifyVideoAvailable();
+        if (!okPref) throw new Error('Vídeo não acessível pelo servidor');
+        youtubeActive = false;
+        localVideoActive = true;
+        bgSource = 'localVideo';
+        if (bgSourceSelect) bgSourceSelect.value = 'localVideo';
+        localFolderActive = false;
+        stopAutoSwap();
+        useSpaceBG = false;
+        if (toggleSpace) toggleSpace.checked = false;
+        if (youtubeFrame) youtubeFrame.src = '';
+        if (localVideoEl) {
+          localVideoEl.src = '/video';
+          localVideoEl.play().catch(() => {});
+        }
+        setVideoVisible(true);
+        setStatus('Vídeo local carregado automaticamente.');
+        return;
+      } catch (e) {
+        // fallback para imagens se falhar
+      }
+    }
+
+    // Caso não haja preferência salva, tenta usar o caminho padrão informado pelo usuário
+    const DEFAULT_LOCAL_VIDEO_PATH = 'C\\Users\\PICHAU\\Videos\\Lago-e\\videoplayback.mp4';
+    try {
+      await setLocalVideoPath(DEFAULT_LOCAL_VIDEO_PATH);
+      const okDef = await verifyVideoAvailable();
+      if (!okDef) throw new Error('Vídeo não acessível pelo servidor');
+      youtubeActive = false;
+      localVideoActive = true;
+      bgSource = 'localVideo';
+      if (bgSourceSelect) bgSourceSelect.value = 'localVideo';
+      localFolderActive = false;
+      stopAutoSwap();
+      useSpaceBG = false;
+      if (toggleSpace) toggleSpace.checked = false;
+      if (youtubeFrame) youtubeFrame.src = '';
+      if (localVideoEl) {
+        localVideoEl.src = '/video';
+        localVideoEl.play().catch(() => {});
+      }
+      try {
+        localStorage.setItem('ar.localVideo.mode', 'path');
+        localStorage.setItem('ar.localVideo.path', DEFAULT_LOCAL_VIDEO_PATH);
+      } catch (e) {}
+      setVideoVisible(true);
+      setStatus('Vídeo local padrão carregado.');
+      return;
+    } catch (e) {
+      // Se falhar, continua para fallback imagens
+    }
+
+    // Fallback: usar imagens da pasta
     await setLocalFolder(dirPathInput.value.trim());
     localFolderActive = true;
     await fetchRandomImageToBackground();
     youtubeActive = false;
+    localVideoActive = false;
     setVideoVisible(false);
     bgSource = 'images';
     if (bgSourceSelect) bgSourceSelect.value = 'images';

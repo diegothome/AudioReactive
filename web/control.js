@@ -16,6 +16,9 @@
   const videoBrightness = $('videoBrightness');
   const dirPathInput = $('dirPath');
   const useFolderButton = $('useFolderButton');
+  const localVideoPathInput = $('localVideoPath');
+  const useLocalVideoButton = $('useLocalVideoButton');
+  const browseLocalVideoButton = $('browseLocalVideoButton');
   const logoPathInput = $('logoPath');
   const useLogoButton = $('useLogoButton');
   const toggleLogo = $('toggleLogo');
@@ -33,6 +36,8 @@
   if (useYoutubeButton) useYoutubeButton.addEventListener('click', () => send('useYoutubeUrl', { url: youtubeUrlInput?.value || '' }));
   if (videoBrightness) videoBrightness.addEventListener('input', (e) => send('setVideoBrightness', { value: parseFloat(e.target.value) }));
   if (useFolderButton) useFolderButton.addEventListener('click', () => send('setDirPathAndUse', { path: dirPathInput?.value || '' }));
+  if (useLocalVideoButton) useLocalVideoButton.addEventListener('click', () => send('useLocalVideoPath', { path: localVideoPathInput?.value || '' }));
+  if (browseLocalVideoButton) browseLocalVideoButton.addEventListener('click', () => send('browseLocalVideo', {}));
   if (useLogoButton) useLogoButton.addEventListener('click', () => send('setLogoPathAndUse', { path: logoPathInput?.value || '' }));
   if (toggleLogo) toggleLogo.addEventListener('change', (e) => send('toggleLogo', { value: e.target.checked }));
   if (spectrumType) spectrumType.addEventListener('change', (e) => send('setSpectrumType', { value: e.target.value }));

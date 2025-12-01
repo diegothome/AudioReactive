@@ -2,12 +2,15 @@ import asyncio
 import random
 from pathlib import Path
 import mimetypes
+import os
+import re
 from typing import Optional, List
 
-from fastapi import FastAPI, WebSocket, HTTPException
+from fastapi import FastAPI, WebSocket, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from pydantic import BaseModel
+from fastapi import Response
 from .audio import AudioAnalyzer
 
 
@@ -133,6 +136,79 @@ def get_logo_file():
         else:
             mime = "image/png"
     return FileResponse(path=str(LOGO_PATH), media_type=mime)
+
+# ====== Vídeo local (arquivo único) ======
+VIDEO_PATH: Optional[Path] = None
+SUPPORTED_VIDEO_EXT = {".mp4", ".webm", ".ogg", ".mov"}
+
+
+class SetVideoBody(BaseModel):
+    path: str
+
+
+@app.post("/video/path")
+def set_video_path(body: SetVideoBody):
+    global VIDEO_PATH
+    raw = body.path.strip()
+    if raw.startswith('"') and raw.endswith('"'):
+        raw = raw[1:-1]
+    p = Path(raw)
+    if not p.exists() or not p.is_file():
+        raise HTTPException(status_code=400, detail="Arquivo de vídeo inválido")
+    if p.suffix.lower() not in SUPPORTED_VIDEO_EXT:
+        raise HTTPException(status_code=400, detail="Formato não suportado. Use .mp4, .webm, .ogg, .mov")
+    VIDEO_PATH = p
+    return {"path": str(VIDEO_PATH)}
+
+
+@app.get("/video")
+def get_video_file(request: Request):
+    if VIDEO_PATH is None:
+        raise HTTPException(status_code=404, detail="Vídeo não definido")
+    file_path = str(VIDEO_PATH)
+    mime, _ = mimetypes.guess_type(file_path)
+    if mime is None:
+        mime = "video/mp4"
+
+    range_header = request.headers.get("range")
+    if range_header:
+        m = re.match(r"bytes=(\d+)-(\d*)", range_header)
+        if not m:
+            raise HTTPException(status_code=416, detail="Cabeçalho Range inválido")
+        file_size = os.path.getsize(file_path)
+        start = int(m.group(1))
+        end = int(m.group(2)) if m.group(2) else file_size - 1
+        if start >= file_size:
+            raise HTTPException(status_code=416, detail="Início fora do tamanho do arquivo")
+        end = min(end, file_size - 1)
+        chunk_size = end - start + 1
+
+        def iter_file(path: str, offset: int, length: int, chunk: int = 1024 * 1024):
+            with open(path, "rb") as f:
+                f.seek(offset)
+                remaining = length
+                while remaining > 0:
+                    data = f.read(min(chunk, remaining))
+                    if not data:
+                        break
+                    remaining -= len(data)
+                    yield data
+
+        headers = {
+            "Content-Range": f"bytes {start}-{end}/{file_size}",
+            "Accept-Ranges": "bytes",
+            "Content-Length": str(chunk_size),
+        }
+        return StreamingResponse(iter_file(file_path, start, chunk_size), media_type=mime, status_code=206, headers=headers)
+
+    return FileResponse(path=file_path, media_type=mime)
+
+@app.head("/video")
+def head_video_file():
+    if VIDEO_PATH is None:
+        raise HTTPException(status_code=404, detail="Vídeo não definido")
+    # Apenas confirma disponibilidade sem corpo
+    return Response(status_code=200)
 
 # Servir arquivos estáticos do frontend por último, para não capturar rotas dinâmicas
 app.mount("/", StaticFiles(directory="web", html=True), name="static")

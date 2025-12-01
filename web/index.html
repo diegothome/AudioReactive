@@ -11,6 +11,7 @@
   <button id="openControl" title="Abrir controles em outra aba">🗗</button>
     <div id="videoLayer">
       <iframe id="youtubeFrame" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+      <video id="localVideo" muted autoplay loop playsinline></video>
     </div>
     <canvas id="canvas"></canvas>
     <div id="controls" class="collapsed">
@@ -41,6 +42,7 @@
         <select id="bgSource">
           <option value="images">Imagens da Pasta</option>
           <option value="video">Vídeo YouTube</option>
+          <option value="localVideo">Vídeo Local</option>
         </select>
       </label>
       <label class="toggle">
@@ -52,6 +54,15 @@
         <div class="row">
           <input id="youtubeUrl" type="text" placeholder="https://www.youtube.com/watch?v=..." value="https://www.youtube.com/watch?v=AOqY6UdJFvo" />
           <button id="useYoutubeButton">Usar YouTube</button>
+        </div>
+      </label>
+      <label>
+        Vídeo Local (caminho completo)
+        <div class="row">
+          <input id="localVideoPath" type="text" placeholder="C:\\Users\\SeuUsuario\\Videos\\meu-video.mp4" value="C:\\Users\\PICHAU\\Videos\\Lago-e\\videoplayback.mp4" />
+          <button id="useLocalVideoButton">Usar Vídeo Local</button>
+          <button id="browseLocalVideoButton">Procurar...</button>
+          <input id="localVideoFile" type="file" accept="video/*" style="display:none" />
         </div>
       </label>
       <label>

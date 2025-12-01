@@ -21,6 +21,7 @@ html, body {
   border: 0;
   transform-origin: center center;
   will-change: transform, filter;
+  object-fit: cover;
 }
 
 #canvas {
@@ -160,6 +161,7 @@ label.toggle { flex-direction: row; align-items: center; gap: 8px; }
 input#dirPath { width: 300px; }
 input#youtubeUrl { width: 340px; }
 input#logoPath { width: 340px; }
+input#localVideoPath { width: 340px; }
 input#logoSize { width: 160px; }
 input#logoOpacity { width: 160px; }
 button#useYoutubeButton {

@@ -66,6 +66,7 @@
           <select id="bgSource" class="form-select">
             <option value="images">Imagens da Pasta</option>
             <option value="video">Vídeo YouTube</option>
+            <option value="localVideo">Vídeo Local</option>
           </select>
         </div>
         <div class="form-check mb-3">
@@ -88,6 +89,16 @@
         </div>
         <div class="d-grid gap-2 mb-3">
           <button id="useYoutubeButton" class="btn btn-danger">Usar YouTube</button>
+        </div>
+
+        <!-- Vídeo local -->
+        <div class="mb-3">
+          <label for="localVideoPath" class="form-label">Vídeo Local (caminho completo)</label>
+          <div class="row">
+            <input id="localVideoPath" class="form-control" type="text" placeholder="C:\\Users\\SeuUsuario\\Videos\\meu-video.mp4" value="C:\\Users\\PICHAU\\Videos\\Lago-e\\videoplayback.mp4" />
+            <button id="useLocalVideoButton" class="btn btn-warning" type="button">Usar Vídeo Local</button>
+            <button id="browseLocalVideoButton" class="btn btn-secondary" type="button">Procurar...</button>
+          </div>
         </div>
 
         <!-- Imagens locais -->
